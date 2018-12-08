@@ -51,11 +51,11 @@ void disp2Depth(Mat &dispMap, Mat &depthMap)
             {
 				//cout << i << " " << j << endl;
 				//cout << dispData[id] <<endl;
-                if (dispMap.at<short>(i, j) < 30){
+                if (dispMap.at<short>(i, j) < 60){
                     continue;
                 }
                 else{
-                    depthMap.at<float>(i, j) = fx * bl / ((float) dispMap.at<short>(i, j));
+                    depthMap.at<float>(i, j) = 2*fx * bl / ((float) dispMap.at<short>(i, j));
                 }
             }
         }
@@ -171,7 +171,7 @@ int main(int argc, char** argv)
 	Mat depth(disp.size(),CV_32FC1);
 	
 	disp2Depth(disp, depth);
-    insertDepth32f(depth);
+    //insertDepth32f(depth);
 
     FileStorage fs_depth("../data/test_data/depth.ext", FileStorage::WRITE);
     fs_depth << "depth" << depth;

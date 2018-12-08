@@ -14,11 +14,11 @@ using namespace cv;
 
 void calDisparity(Mat left, Mat right, Mat& disparity)
 {
-    Ptr<StereoSGBM> sgbm = StereoSGBM::create(0,32,3);
-    int numberOfDisparities = ((left.cols / 6) + 15) & -32;
-	sgbm->setPreFilterCap(63);
+    Ptr<StereoSGBM> sgbm = StereoSGBM::create(0,16,3);
+    int numberOfDisparities = ((left.cols / 6) + 15) & -16;
+    sgbm->setPreFilterCap(15); //63
     int SADWindowSize = 9;
-    int sgbmWinSize = SADWindowSize > 0 ? SADWindowSize : 3;
+    int sgbmWinSize = SADWindowSize > 0 ? SADWindowSize : 5;
     sgbm->setBlockSize(sgbmWinSize);
     int cn = left.channels();
     sgbm->setP1(8 * cn*sgbmWinSize*sgbmWinSize);
@@ -26,12 +26,12 @@ void calDisparity(Mat left, Mat right, Mat& disparity)
     sgbm->setMinDisparity(0);
     sgbm->setNumDisparities(numberOfDisparities);
     sgbm->setUniquenessRatio(10);
-    sgbm->setSpeckleWindowSize(100);
+    sgbm->setSpeckleWindowSize(1600);
     sgbm->setSpeckleRange(2);
     sgbm->setDisp12MaxDiff(10);
     sgbm->compute(left, right, disparity);
 
-    float scalar = 32.0;
+    float scalar = 16.0;
     disparity = disparity/scalar;
     //disparity = disparity + 100*one;
 	//abs(disparity);
@@ -53,9 +53,8 @@ int main(int argc, char** argv)
     }
 
     calDisparity(lrgb, rrgb, disparity);
-
 	Mat disp_show(disparity.size(), CV_16UC1);
-	disparity.copyTo(disp_show);
+    disparity.copyTo(disp_show);
 	normalize(disp_show, disp_show, 0.1, 65535, NORM_MINMAX, CV_16UC1); 
 	namedWindow("disp_show", WINDOW_AUTOSIZE);
 	imshow("disp_show",disp_show);

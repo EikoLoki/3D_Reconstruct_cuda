@@ -17,10 +17,10 @@ typedef pcl::PointCloud<PointT> PointCloud;
 
 //inner parameters
 const double camera_factor = 1000;
-const double camera_cx = 559.4725;
-const double camera_cy = 374.8518;
-const double camera_fx = 1094.2;
-const double camera_fy = 1099.5;
+const double camera_cx = 559.4725*2;
+const double camera_cy = 374.8518*2;
+const double camera_fx = 1094.2*2;
+const double camera_fy = 1099.5*2;
 const double camera_baseline = 5.35;
 
 // 主函数 
