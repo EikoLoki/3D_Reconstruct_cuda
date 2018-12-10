@@ -155,16 +155,19 @@ void insertDepth32f(Mat& depth)
         {
             s = 201;
         }
-        cv::GaussianBlur(depth, depth, cv::Size(s, s), s, s);
+        //cv::GaussianBlur(depth, depth, cv::Size(s, s), s, s);
     }
 }
 
 
-depthrebuild(Mat &depth, ksize, threshold)
+void depthrebuild(Mat &depth, int ksize, double threshold)
 {
     const int width = depth.cols;
     const int height = depth.rows;
     float* data = (float*)depth.data;
+    int side = ksize / 2;
+
+    // same row smooth
     for (int i = 0; i < height; ++i)
     {
         int id1 = i * width;
@@ -173,18 +176,50 @@ depthrebuild(Mat &depth, ksize, threshold)
             int id2 = id1 + j;
             if (data[id2] > 1e-3)
             {
-                side = ksize % 2;
-                left_sum = 0;
-                right_sum = 0;
+                double left_sum = 0;
+                double right_sum = 0;
+                double diff = 0;
+                //printf("id2:%d\tid1:%d\tside:%d\n",id2,id1,side);
                 if(id2 - side >= id1 && id2 + side <= id1 + width){
-                    for(k = 0; k < side; k++){
+                    for(int k = 0; k < side; k++){
                         left_sum += data[id2 - k] - data[id2];
                         right_sum += data[id2 + k] - data[id2];
+                        //printf("left_sum: %f\tright_sum: \%f\n",left_sum,right_sum);
                     } 
                 }
                 diff = left_sum + right_sum;
-                if(diff < 500 && diff > -500){
-                    data[id2] += diff/ (2 * ksize);
+                if(diff < threshold*side && diff > -threshold*side){
+                     data[id2] += diff/ (2 * double(ksize));
+                    //printf("diff: %f\n",diff);
+                }
+            }
+        }
+    }
+
+    // same col smooth
+    for (int i = 0; i < height; ++i)
+    {
+        int id1 = i * width;
+        for (int j = 0; j < width; ++j)
+        {
+            int id2 = id1 + j;
+            if (data[id2] > 1e-3)
+            {
+                double top_sum = 0;
+                double bot_sum = 0;
+                double diff = 0;
+                //printf("id2:%d\tid1:%d\tside:%d\n",id2,id1,side);
+                if(id1 - side >= 0  && id1 + side <= height){
+                    for(int k = 0; k < side; k++){
+                        top_sum += data[id2 - k*width] - data[id2];
+                        bot_sum += data[id2 + k*width] - data[id2];
+                        //printf("left_sum: %f\tright_sum: \%f\n",left_sum,right_sum);
+                    }
+                }
+                diff = top_sum + bot_sum;
+                if(diff < threshold*side && diff > -threshold*side){
+                     data[id2] += diff/ (2 * double(ksize));
+                    //printf("diff: %f\n",diff);
                 }
             }
         }
@@ -204,6 +239,7 @@ int main(int argc, char** argv)
 	
 	disp2Depth(disp, depth);
     //insertDepth32f(depth);
+    depthrebuild(depth,75,15);
 
     FileStorage fs_depth("../data/test_data/depth.ext", FileStorage::WRITE);
     fs_depth << "depth" << depth;
