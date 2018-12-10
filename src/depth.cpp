@@ -160,6 +160,38 @@ void insertDepth32f(Mat& depth)
 }
 
 
+depthrebuild(Mat &depth, ksize, threshold)
+{
+    const int width = depth.cols;
+    const int height = depth.rows;
+    float* data = (float*)depth.data;
+    for (int i = 0; i < height; ++i)
+    {
+        int id1 = i * width;
+        for (int j = 0; j < width; ++j)
+        {
+            int id2 = id1 + j;
+            if (data[id2] > 1e-3)
+            {
+                side = ksize % 2;
+                left_sum = 0;
+                right_sum = 0;
+                if(id2 - side >= id1 && id2 + side <= id1 + width){
+                    for(k = 0; k < side; k++){
+                        left_sum += data[id2 - k] - data[id2];
+                        right_sum += data[id2 + k] - data[id2];
+                    } 
+                }
+                diff = left_sum + right_sum;
+                if(diff < 500 && diff > -500){
+                    data[id2] += diff/ (2 * ksize);
+                }
+            }
+        }
+    }
+}
+
+
 int main(int argc, char** argv)
 {
     
