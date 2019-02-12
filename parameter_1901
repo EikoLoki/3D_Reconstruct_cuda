@@ -1,0 +1,19 @@
+// 1901 new parameters
+const double camera_factor = 1000; // millimeter
+const double camera_cx_left = 546.0042;
+const double camera_cy_left = 394.5711;
+const double camera_fx_left = 1065.3;
+const double camera_fy_left = 1070.8;
+const double camera_s_left = 1.1642;
+const double camera_cx_right = 679.8714;
+const double camera_cy_right = 359.9285;
+const double camera_fx_right = 1062.9;
+const double camera_fy_right = 1068.0;
+const double camera_s_right = 2.5731;
+const double camera_baseline = 5.35;
+
+const double RD_left[] = {-0.3700, 0.5781, -0.2837};  // Radial Distortion of left camera
+const double TD_left[] = {-0.0014, -0.0073};          // Tangential Distortion of left camera
+const double RD_right[] = {-0.3991, 0.7110, -0.6933}; // Radial Distortion of right camera
+const double TD_right[] = {-0.0040, -0.0069};         // Tangential Distortion of right camera
+

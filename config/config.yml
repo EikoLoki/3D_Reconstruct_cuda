@@ -1,0 +1,26 @@
+%YAML:1.0
+----
+# camera intrinsics
+# left camera 
+camera.lfx: 1065.3
+camera.lfy: 1070.8
+camera.lcx: 546.0042
+camera.lcy: 394.5711
+camera.ls: 1.1642
+camera.lrd: [-0.3700, 0.5781, -0.2837] # radial distortion of left camera
+camera.ltd: [-0.0014, -0.0073] # tangential distortion of right camera
+# right camera
+camera.rfx: 1062.9
+camera.rfy: 1068.0
+camera.rcx: 679.8714
+camera.rcy: 359.9285
+camera.rs: 2.5731
+camera.rrd: [-0.3991, 0.7110, -0.0069]
+camera.rtd: [-0.0040, -0.0069]
+
+# camera extrinsics
+camera.bl: 5.35
+camera.R: [0.999715113352754, -0.006517133674422,-0.022961252203662 ,
+           0.006921033962076, 0.999821941548705, 0.017555184039881,
+           0.022842754277588, -0.017709098408671, 0.999582210931430] # Rotation of right camera to left camera
+camera.T: [-5.403825604029611, 0.133984745864434, -0.098250420949267] # Translation of right camera to left camera

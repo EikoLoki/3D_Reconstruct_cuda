@@ -6,6 +6,7 @@
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/core/core.hpp"
+#include "opencv2/ximgproc.hpp"
 
 
 using namespace std;
@@ -15,7 +16,18 @@ using namespace cv;
 void calDisparity(Mat left, Mat right, Mat& disparity)
 {
     Ptr<StereoSGBM> sgbm = StereoSGBM::create(0,16,3);
-    int numberOfDisparities = ((left.cols / 6) + 15) & -16;
+    //wls
+    Ptr<StereoMatcher> right_matcher = ximgproc::createRightMatcher(sgbm);
+    Ptr<ximgproc::DisparityWLSFilter> wls_filter;
+    Mat left_gray, right_gray, left_disparity, right_disparity;
+    left_gray = left.clone();
+    right_gray = right.clone();
+    cvtColor(left_gray,left_gray, CV_BGR2GRAY);
+    cvtColor(right_gray, right_gray, CV_BGR2GRAY);
+
+
+
+    int numberOfDisparities = ((left.cols / 10) + 15) & -16;
     sgbm->setPreFilterCap(15); //63
     int SADWindowSize = 9;
     int sgbmWinSize = SADWindowSize > 0 ? SADWindowSize : 5;
@@ -23,19 +35,39 @@ void calDisparity(Mat left, Mat right, Mat& disparity)
     int cn = left.channels();
     sgbm->setP1(8 * cn*sgbmWinSize*sgbmWinSize);
     sgbm->setP2(32 * cn*sgbmWinSize*sgbmWinSize);
-    sgbm->setMinDisparity(0);
+    sgbm->setMode(StereoSGBM::MODE_SGBM_3WAY);
     sgbm->setNumDisparities(numberOfDisparities);
     sgbm->setUniquenessRatio(10);
     sgbm->setSpeckleWindowSize(1600);
     sgbm->setSpeckleRange(2);
     sgbm->setDisp12MaxDiff(10);
-    sgbm->compute(left, right, disparity);
 
-    float scalar = 16.0;
-    disparity = disparity/scalar;
-    //disparity = disparity + 100*one;
-	//abs(disparity);
-	//disparity.convertTo(disparity, CV_8U, 255/(numberOfDisparities*16));
+    wls_filter = ximgproc::createDisparityWLSFilter(sgbm);
+    double start = getTickCount();
+
+    sgbm->compute(left_gray, right_gray, left_disparity);
+    right_matcher->compute(right_gray, left_gray, right_disparity);
+
+
+    wls_filter->setLambda(8000);
+    wls_filter->setSigmaColor(1.5);
+    wls_filter->filter(left_disparity,left,disparity,right_disparity);
+    Mat conf_map = Mat(left.rows, left.cols, CV_8U);
+    conf_map = Scalar(255);
+    Rect ROI;
+    conf_map = wls_filter->getConfidenceMap();
+    ROI = wls_filter->getROI();
+    Mat filtered;
+    ximgproc::getDisparityVis(right_disparity,filtered,1.0);
+    imshow("filtered", filtered);;
+    waitKey();
+
+
+    double end = getTickCount();
+
+    printf("cost time: %lf\n", (end - start)*1000 /getTickFrequency());
+    //float scalar = 16.0;
+    disparity = right_disparity;//scalar;
 }
 
 
@@ -53,9 +85,10 @@ int main(int argc, char** argv)
     }
 
     calDisparity(lrgb, rrgb, disparity);
-	Mat disp_show(disparity.size(), CV_16UC1);
-    disparity.copyTo(disp_show);
-	normalize(disp_show, disp_show, 0.1, 65535, NORM_MINMAX, CV_16UC1); 
+    Mat disp_show(disparity);
+    disparity.convertTo(disparity,CV_16U);
+    normalize(disp_show, disp_show, 0.1, 65535, NORM_MINMAX, CV_16UC1);
+    cout << disp_show.type() << endl;
 	namedWindow("disp_show", WINDOW_AUTOSIZE);
 	imshow("disp_show",disp_show);
 	waitKey(0);
@@ -66,11 +99,10 @@ int main(int argc, char** argv)
     FileStorage file("../data/test_data/disparity.ext", cv::FileStorage::WRITE);
 
     // Write to file!
-    file << "disp" << disparity;
+    file << "disparity" << disparity;
     file.release();
 
 	imwrite("../data/test_data/davinci_rgb.png",rgb);
-    //imwrite("../data/test_data/davinci_disp.",disparity);
     imwrite("../data/test_data/davinci_disp_show.png",disp_show);
 	
 	return 0;
