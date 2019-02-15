@@ -54,7 +54,7 @@ int main(int argc, char** argv)
         gpu::GpuMat mapRy_gpu(mapRy);
         gpu::GpuMat rectifyL_gpu, rectifyR_gpu;
 
-        gpu::remap(rawL, rectifyL_gpu, mapLx_gpu, mapLx_gpu, INTER_LINEAR);
+        gpu::remap(rawL, rectifyL_gpu, mapLx_gpu, mapLy_gpu, INTER_LINEAR);
         gpu::remap(rawR, rectifyR_gpu, mapRx_gpu, mapRy_gpu, INTER_LINEAR);
 
         Mat rectifyL, rectifyR;

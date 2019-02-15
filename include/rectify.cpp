@@ -1,6 +1,6 @@
 #include <rectify.h>
 
-bool Rectify::rectify(stereoCamera camera){
+bool Rectify::rectify(stereoCamera& camera){
     // get images from camera
     cv::Mat left_raw, right_raw;
     left_raw = camera.left_src;
@@ -19,7 +19,7 @@ bool Rectify::rectify(stereoCamera camera){
     cv::Mat R = camera.getRotation();
     cv::Mat T = camera.getTranslation();
 
-
+    // all matrix in this function should have the data type of CV_64F
     cv::stereoRectify(IntrinsicL,distCoeffL,IntrinsicR,distCoeffR,img_size,
                       R,T,Rl,Rr,Pl,Pr,Q,cv::CALIB_ZERO_DISPARITY,-1,img_size);
 
@@ -28,8 +28,29 @@ bool Rectify::rectify(stereoCamera camera){
 
     left_rec = left_raw.clone();
     right_rec = right_raw.clone();
-    cv::gpu::remap(left_rec, left_rec, mapLx, mapLy, INTER_LINEAR);
-    cv::remap(right_rec, right_rec, mapRx, mapRy, INTER_LINEAR);
+
+#if GPU_ON
+    cv::gpu::GpuMat left_raw_g(left_raw);
+    cv::gpu::GpuMat right_raw_g(right_raw);
+    mapLx_g.upload(mapLx);
+    mapLy_g.upload(mapLy);
+    mapRx_g.upload(mapRx);
+    mapRy_g.upload(mapRy);
+
+    cv::gpu::remap(left_raw_g, left_rec_g, mapLx_g, mapLy_g, cv::INTER_LINEAR);
+    cv::gpu::remap(right_raw_g,right_rec_g, mapRx_g, mapRy_g, cv::INTER_LINEAR);
+
+    left_rec_g.download(left_rec);
+    right_rec_g.download(right_rec);
+#else
+    cv::remap(left_rec, left_rec, mapLx, mapLy, cv::INTER_LINEAR);
+    cv::remap(right_rec, right_rec, mapRx, mapRy, cv::INTER_LINEAR);
+#endif
+    std::cout << "rectify successfully!" << std::endl;
 
     return true;
+}
+
+cv::Mat Rectify::getQMatrix(){
+    return Q;
 }

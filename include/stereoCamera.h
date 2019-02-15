@@ -42,7 +42,6 @@ public:
     cv::Mat getDistCoeff(device_num num);
     cv::Mat getRotation();
     cv::Mat getTranslation();
-    float getBaseLine();
 
     /* get image from directory*/
     bool getImage(const std::string& filepath, const int number);
