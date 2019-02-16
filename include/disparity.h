@@ -28,15 +28,15 @@ private:
 public:
 
 #if WLS_FILTER
-    Disparity():P1(8),P2(32),SADWindowSize(9),
-        speckleRange(2),speckleWindowSize(1600),maxDisparityofImg(10),
+    Disparity():P1(8),P2(32),SADWindowSize(9), preFilterCap(0),
+        speckleRange(2),speckleWindowSize(200),maxDisparityofImg(10),
         wls_lambda(1000),wls_sigma(1.5){}
 
     void setLambda(int lambda);
     void setSigma(float sigma);
 #else
-    Disparity():P1(8),P2(32),SADWindowSize(9),
-        speckleRange(2),speckleWindowSize(1600),maxDisparityofImg(10){}
+    Disparity():P1(8),P2(32),SADWindowSize(9), preFilterCap(0),
+        speckleRange(2),speckleWindowSize(200),maxDisparityofImg(10){}
 #endif
 
 

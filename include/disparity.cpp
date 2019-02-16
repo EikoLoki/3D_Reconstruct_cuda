@@ -52,9 +52,9 @@ void Disparity::callSGBM(Mat &left, Mat &right, Mat& disp){
 bool Disparity::computeDisparity(Rectify rectify){
     Mat left_rec(rectify.left_rec);
     Mat right_rec(rectify.right_rec);
-
-    callSGBM(left_rec, right_rec, disparity);
-    disparity.convertTo(disparity, CV_32F);
+    Mat disp;
+    callSGBM(left_rec, right_rec, disp);
+    disp.convertTo(disparity, CV_32F);
     disparity = disparity/16.0;
     if (disparity.empty()){
         std::cerr << "compute disparity failed!\n" << std::endl;

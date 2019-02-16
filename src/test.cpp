@@ -4,6 +4,7 @@
 #include <rectify.h>
 #include <disparity.h>
 #include <depth.h>
+#include <pcd_saver.h>
 
 using namespace std;
 using namespace cv;
@@ -12,15 +13,14 @@ int main(int argc, char** argv){
     if (argc != 3){
             cout << "please provide config file and camera file!" << endl;
     }
-    string configFilePath = "../config/";
-    string configFileName = argv[1];
-    const string configFile = configFilePath + configFileName;
-    Config::getParameterFile(configFile);
+
+    Config::getParameterFile(argv[1]);
 
 
     // open stereo camera
     stereoCamera endo;
-    endo.getImage(argv[2],1);
+    int number = atoi(argv[3]);
+    endo.getImage(argv[2], number);
 
     // start rectify
     Rectify rec;
@@ -48,6 +48,11 @@ int main(int argc, char** argv){
     cout << Q << endl;
     FileStorage depth_fs("../data/depth.ext",FileStorage::WRITE);
     depth_fs << "depth" << dep.depth;
+
+    //build point cloud
+    PCD_SAVER pcl;
+    pcl.buildPointCloud(dep);
+    pcl.savePointCloud("../data/PointCloud.pcd");
 
     return 0;
 }

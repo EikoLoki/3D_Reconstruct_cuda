@@ -12,6 +12,6 @@
 
 
 #define GPU_ON 0
-#define WLS_FILTER 0
+#define WLS_FILTER 0 // this only work for CPU based disparity computation
 
 #endif

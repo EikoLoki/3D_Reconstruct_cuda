@@ -4,7 +4,7 @@ ADD_LIBRARY( 3D-Reconstruct SHARED
     rectify.cpp
     disparity.cpp
     depth.cpp
-    pcd.cpp
+    pcd_saver.cpp
     common.h)
 
 TARGET_LINK_LIBRARIES(3D-Reconstruct ${THIRD_PARTY_LIBRARIES})

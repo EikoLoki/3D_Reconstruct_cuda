@@ -83,7 +83,7 @@ bool stereoCamera::getImage(const std::string& filepath, const int number){
 
     std::string left_path = filepath + left_name;
     std::string right_path = filepath + right_name;
-
+    std::cout << left_path << std::endl;
     left_src = cv::imread(left_path);
     right_src = cv::imread(right_path);
 
