@@ -1,0 +1,2 @@
+CUDA_ADD_EXECUTABLE(3D_reconstruction test.cpp)
+TARGET_LINK_LIBRARIES(3D_reconstruction 3D-Reconstruct)

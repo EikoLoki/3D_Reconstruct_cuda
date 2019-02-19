@@ -1,130 +1,146 @@
-#include <iostream>
-#include <string>
+#include <disparity.h>
 
-//opencv lib
-#include "opencv2/calib3d/calib3d.hpp"
-#include "opencv2/imgproc/imgproc.hpp"
-#include "opencv2/highgui/highgui.hpp"
-#include "opencv2/core/core.hpp"
-#include "opencv2/ximgproc.hpp"
-
-
-using namespace std;
-using namespace cv;
-
-
-void calDisparity(Mat left, Mat right, Mat& disparity)
-{
+void Disparity::callSGBM(Mat &left, Mat &right, Mat& disp){
     Ptr<StereoSGBM> sgbm = StereoSGBM::create(0,16,3);
-    //wls
+
+#if WLS_FILTER
+    Mat disparity_l;
+    Mat disparity_r;
+    Mat disparity_wls;
+    Mat left_gray(left);
+    Mat right_gray(right);
+    cvtColor(left_gray, left, CV_BGR2GRAY);
+    cvtColor(right_gray, right, CV_BGR2GRAY);
     Ptr<StereoMatcher> right_matcher = ximgproc::createRightMatcher(sgbm);
     Ptr<ximgproc::DisparityWLSFilter> wls_filter;
-    Mat left_gray, right_gray, left_disparity, right_disparity;
-    left_gray = left.clone();
-    right_gray = right.clone();
-    cvtColor(left_gray,left_gray, CV_BGR2GRAY);
-    cvtColor(right_gray, right_gray, CV_BGR2GRAY);
+#endif
 
-
-
-    int numberOfDisparities = ((left.cols / 10) + 15) & -16;
-    sgbm->setPreFilterCap(15); //63
-    int SADWindowSize = 9;
-    int sgbmWinSize = SADWindowSize > 0 ? SADWindowSize : 5;
-    sgbm->setBlockSize(sgbmWinSize);
+    int numberofDisparities = (left.cols / maxDisparityofImg + 15) & -16;
+#if WLS_FILTER
+    int cn = left_gray.channels();
+#else
     int cn = left.channels();
-    sgbm->setP1(8 * cn*sgbmWinSize*sgbmWinSize);
-    sgbm->setP2(32 * cn*sgbmWinSize*sgbmWinSize);
+#endif
+    // parameters set from class
+    sgbm->setBlockSize(SADWindowSize);
+    sgbm->setPreFilterCap(preFilterCap);
+    sgbm->setP1(P1 * cn * SADWindowSize*SADWindowSize);
+    sgbm->setP2(P2 * cn * SADWindowSize*SADWindowSize);
+    sgbm->setSpeckleRange(speckleRange);
+    sgbm->setSpeckleWindowSize(speckleWindowSize);
+    sgbm->setNumDisparities(numberofDisparities);
+
+    // default parameters
     sgbm->setMode(StereoSGBM::MODE_SGBM_3WAY);
-    sgbm->setNumDisparities(numberOfDisparities);
-    sgbm->setUniquenessRatio(10);
-    sgbm->setSpeckleWindowSize(1600);
-    sgbm->setSpeckleRange(2);
     sgbm->setDisp12MaxDiff(10);
+    sgbm->setUniquenessRatio(10);
 
+#if WLS_FILTER
+    //wls filter
     wls_filter = ximgproc::createDisparityWLSFilter(sgbm);
-    double start = getTickCount();
-
-    sgbm->compute(left_gray, right_gray, left_disparity);
-    right_matcher->compute(right_gray, left_gray, right_disparity);
-
-
-    wls_filter->setLambda(8000);
-    wls_filter->setSigmaColor(1.5);
-    wls_filter->filter(left_disparity,left,disparity,right_disparity);
-    Mat conf_map = Mat(left.rows, left.cols, CV_8U);
-    conf_map = Scalar(255);
-    Rect ROI;
-    conf_map = wls_filter->getConfidenceMap();
-    ROI = wls_filter->getROI();
-    Mat filtered;
-    ximgproc::getDisparityVis(right_disparity,filtered,1.0);
-    imshow("filtered", filtered);;
-    waitKey();
-
-
-    double end = getTickCount();
-
-    printf("cost time: %lf\n", (end - start)*1000 /getTickFrequency());
-    //float scalar = 16.0;
-    disparity = right_disparity;//scalar;
+    sgbm->compute(left_gray, right_gray, disparity_l);
+    right_matcher->compute(right_gray, left_gray, disparity_r);
+    wls_filter->setLambda(wls_lambda);
+    wls_filter->setSigmaColor(wls_sigma);
+    wls_filter->filter(disparity_l,left_gray, disparity_wls, disparity_r);
+    disp = disparity_wls;
+#else
+    sgbm->compute(left,right,disp);
+#endif
 }
 
+#if GPU_ON
+void Disparity::callLibSGM(cv::Mat& left, cv::Mat& right, cv::Mat& disp){
+    // set parameters for libSGM
+	cvtColor(left,left,CV_BGR2GRAY);
+	cvtColor(right,right,CV_BGR2GRAY);
+    int numberofDisparities = 128;
+    sgm::LibSGMWrapper sgmw{numberofDisparities};
+    int rows = left.rows;
+    int cols = left.cols;
+    int size = rows * cols;
+    // call cuda
+    uint8_t *d_l;
+    uint8_t *d_r;
+    cudaMalloc((void **)&d_l, sizeof(uint8_t)*size);
+    cudaMalloc((void **)&d_r, sizeof(uint8_t)*size);
 
-/*
- * usage: fill the hollow part in depth map with integral method
- * input: depth (with hollow) CV_32FC1
- * output: depth (fill the hollow) CV_32FC1
- * destructive function
- */
-void insertDepth_integral(cv::Mat &depth);
+    static cudaStream_t stream1;
+    cudaStreamCreate(&stream1);
+    cudaMemcpyAsync(d_l, left.ptr<uint8_t>(), sizeof(uint8_t)*size, cudaMemcpyHostToDevice, stream1);
+    cudaMemcpyAsync(d_r, right.ptr<uint8_t>(), sizeof(uint8_t)*size, cudaMemcpyHostToDevice, stream1);
+    cudaStreamSynchronize(stream1);
+    cv::cuda::GpuMat d_left(rows,cols,CV_8U,d_l);
+    cv::cuda::GpuMat d_right(rows,cols,CV_8U,d_r);
+    cv::cuda::GpuMat d_disparity;
 
-/*
- * usage: fill the hollow part in depth map with interpolate method
- * input: depth (with hollow) CV_32FC1
- *        kszie: interpolate window size
- *        threshold: max depth difference in window;
- * output: depth (fill the hollow) CV_32FC1
- * detructive function
- * result is as solid and smooth as integral method
- * not very recommand
- */
+    sgmw.execute(d_left, d_right, d_disparity);
 
-void insertDepth_interpolate(cv::Mat &depth, int ksize=75, double threshold=15);
+    disparity_cuda = d_disparity;
+    d_disparity.download(disp);
 
-int main(int argc, char** argv)
-{
-    Mat lrgb,rrgb,disparity;
-	
-    lrgb = imread("../data/test_data/rectifyL.png", CV_LOAD_IMAGE_COLOR);
-    rrgb = imread("../data/test_data/rectifyR.png", CV_LOAD_IMAGE_COLOR);
-	if(! lrgb.data )
-    {
-        cout <<  "Could not open or find the image" << endl ;
-        return -1;
+    cudaFree(d_l);
+    cudaFree(d_r);
+	cudaStreamDestroy(stream1);
+}
+#endif
+
+bool Disparity::computeDisparity(Rectify rectify){
+    Mat left_rec(rectify.left_rec);
+    Mat right_rec(rectify.right_rec);
+    Mat disp;
+#if GPU_ON
+    callLibSGM(left_rec, right_rec, disp);
+#else
+    callSGBM(left_rec, right_rec, disp);
+#endif
+    disp.convertTo(disparity, CV_32F, 256.0 / (128.0*16.0));
+	cv::cuda::GpuMat d_disparity = disparity_cuda;  // GpuMat need to copy to another mat and then convert values to the former one
+	d_disparity.convertTo(disparity_cuda, CV_32F, 256.0 / (128.0*16.0));
+	cv::Mat h_disparitycuda;
+	disparity_cuda.download(h_disparitycuda);
+    if (disparity.empty()){
+        std::cerr << "compute disparity failed!\n" << std::endl;
+        return false;
+    }else{
+        std::cout << "disparity type:" << disparity.type() << "\n"
+                     "disparity size:" << disparity.size << "\n" << std::endl;
+        return true;
     }
+}
 
-    calDisparity(lrgb, rrgb, disparity);
-    Mat disp_show(disparity);
-    disparity.convertTo(disparity,CV_16U);
-    normalize(disp_show, disp_show, 0.1, 65535, NORM_MINMAX, CV_16UC1);
-    cout << disp_show.type() << endl;
-	namedWindow("disp_show", WINDOW_AUTOSIZE);
-	imshow("disp_show",disp_show);
-	waitKey(0);
-	
-	Mat rgb;
-    rgb = lrgb;
+void Disparity::setP1(int P1){
+    this->P1 = P1;
+}
 
-    FileStorage file("../data/test_data/disparity.ext", cv::FileStorage::WRITE);
+void Disparity::setP2(int P2){
+    this->P2 = P2;
+}
 
-    // Write to file!
-    file << "disparity" << disparity;
-    file.release();
+void Disparity::setPreFilterCap(int PFcap){
+    preFilterCap = PFcap;
+}
 
-	imwrite("../data/test_data/davinci_rgb.png",rgb);
-    imwrite("../data/test_data/davinci_disp_show.png",disp_show);
-	
-	return 0;
+void Disparity::setSADWindowSize(int sad_size){
+    SADWindowSize = sad_size;
+}
 
+void Disparity::setSpeckleWindowSize(int speckle_size){
+    speckleWindowSize = speckle_size;
+}
+
+void Disparity::setSpeckleRange(int speckle_range){
+    speckleRange = speckle_range;
+}
+
+void Disparity::setmaxDisparityofImg(int maxDisparityRatio){
+    maxDisparityofImg = maxDisparityRatio;
+}
+
+int Disparity::getP1(){
+    return P1;
+}
+
+int Disparity::getP2(){
+    return P2;
 }

@@ -3,11 +3,18 @@
 
 #include <common.h>
 #include <rectify.h>
+#if GPU_ON
+#include <libsgm.h>
+#include <libsgm_wrapper.h>
+#endif
 
 using namespace cv;
 
 class Disparity{
 public:
+#if GPU_ON
+	cv::cuda::GpuMat disparity_cuda;
+#endif
     cv::Mat disparity;
 private:
     int P1;
@@ -25,6 +32,9 @@ private:
 
 private:
     void callSGBM(cv::Mat& left, cv::Mat& right, cv::Mat& disp);
+#if GPU_ON
+	void callLibSGM(cv::Mat& left, cv::Mat& right, cv::Mat& disp);
+#endif
 public:
 
 #if WLS_FILTER
@@ -39,12 +49,7 @@ public:
         speckleRange(2),speckleWindowSize(200),maxDisparityofImg(10){}
 #endif
 
-
-#if GPU_ON
-    bool computeDisparity_cuda(Rectify recity); // TODO first
-#else
     bool computeDisparity(Rectify rectify);
-#endif
 
     void setP1(int P1);
     void setP2(int P2);

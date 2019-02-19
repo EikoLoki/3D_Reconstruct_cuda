@@ -21,12 +21,12 @@ private:
     cv::Mat mapRy;
 
 #if GPU_ON
-    cv::gpu::GpuMat left_rec_g;
-    cv::gpu::GpuMat right_rec_g;
-    cv::gpu::GpuMat mapLx_g;
-    cv::gpu::GpuMat mapLy_g;
-    cv::gpu::GpuMat mapRx_g;
-    cv::gpu::GpuMat mapRy_g; 
+    cv::cuda::GpuMat left_rec_g;
+    cv::cuda::GpuMat right_rec_g;
+    cv::cuda::GpuMat mapLx_g;
+    cv::cuda::GpuMat mapLy_g;
+    cv::cuda::GpuMat mapRx_g;
+    cv::cuda::GpuMat mapRy_g; 
 #endif
 
 public:

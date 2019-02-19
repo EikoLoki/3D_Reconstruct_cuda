@@ -30,15 +30,15 @@ bool Rectify::rectify(stereoCamera& camera){
     right_rec = right_raw.clone();
 
 #if GPU_ON
-    cv::gpu::GpuMat left_raw_g(left_raw);
-    cv::gpu::GpuMat right_raw_g(right_raw);
+    cv::cuda::GpuMat left_raw_g(left_raw);
+    cv::cuda::GpuMat right_raw_g(right_raw);
     mapLx_g.upload(mapLx);
     mapLy_g.upload(mapLy);
     mapRx_g.upload(mapRx);
     mapRy_g.upload(mapRy);
 
-    cv::gpu::remap(left_raw_g, left_rec_g, mapLx_g, mapLy_g, cv::INTER_LINEAR);
-    cv::gpu::remap(right_raw_g,right_rec_g, mapRx_g, mapRy_g, cv::INTER_LINEAR);
+    cv::cuda::remap(left_raw_g, left_rec_g, mapLx_g, mapLy_g, cv::INTER_LINEAR);
+    cv::cuda::remap(right_raw_g,right_rec_g, mapRx_g, mapRy_g, cv::INTER_LINEAR);
 
     left_rec_g.download(left_rec);
     right_rec_g.download(right_rec);

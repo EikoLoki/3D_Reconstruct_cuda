@@ -38,6 +38,7 @@ int main(int argc, char** argv){
     disp_map.convertTo(disp_vis, CV_8U);
     FileStorage disp_fs("../data/disparity.ext",FileStorage::WRITE);
     disp_fs << "disparity" << disp_map;
+	disp_fs.release();
     imshow("disparity", disp_vis);
     waitKey();
 
@@ -48,6 +49,7 @@ int main(int argc, char** argv){
     cout << Q << endl;
     FileStorage depth_fs("../data/depth.ext",FileStorage::WRITE);
     depth_fs << "depth" << dep.depth;
+	depth_fs.release();
 
     //build point cloud
     PCD_SAVER pcl;
