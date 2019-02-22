@@ -1,13 +1,36 @@
 #include <common.h>
 #include <config.h>
 #include <stereoCamera.h>
-#include <rectify.h>
-#include <disparity.h>
-#include <depth.h>
-#include <pcd_saver.h>
+#include <rectifier.h>
+#include <disparityCalculator.h>
+#include <depthCalculator.h>
+#include <pcdSaver.h>
 
 using namespace std;
 using namespace cv;
+
+
+/* get image from directory*/
+void getImage(const std::string& filepath, const int number, cv::Mat& left_src, cv::Mat& right_src){
+    char left_name[20];
+    char right_name[20];
+    sprintf(left_name, "left%02d.png",number);
+    sprintf(right_name, "right%02d.png",number);
+
+    std::string left_path = filepath + left_name;
+    std::string right_path = filepath + right_name;
+    std::cout << left_path << std::endl;
+    left_src = cv::imread(left_path);
+    right_src = cv::imread(right_path);
+
+    if(left_src.empty() || right_src.empty()){
+        std::cerr << "file does not exist!" << std::endl;
+    } else {
+        std::cout << "image is loaded successfully!" << std::endl;
+    }
+}
+
+
 
 int main(int argc, char** argv){
     if (argc != 3){
@@ -15,46 +38,72 @@ int main(int argc, char** argv){
     }
 
     Config::getParameterFile(argv[1]);
+	int number = atoi(argv[3]);
+
+	StereoCamera camera;
+	Rectifier rectifier(camera);
+	DisparityCalculator disparityCalculator;
+	DepthCalculator depthCalculator(rectifier.Q);
+	PCDSaver pcdSaver;
+
+	for (int i = 1; i <= number; i++){
 
 
-    // open stereo camera
-    stereoCamera endo;
-    int number = atoi(argv[3]);
-    endo.getImage(argv[2], number);
+	    // 1. get new image pair
+	    cv::Mat right_src;
+	    cv::Mat left_src;
+    	getImage(argv[2], i, left_src, right_src);
 
-    // start rectify
-    Rectify rec;
-    rec.rectify(endo);
-    Mat rec_l = rec.left_rec;
-    Mat rec_r = rec.right_rec;
-    imshow("rec",rec_l/2 + rec_r/2);
-    waitKey();
+		double start = cv::getTickCount();
 
-    // build disparity map
-    Disparity disp;
-    disp.computeDisparity(rec);
-    Mat disp_map = disp.disparity;
-    Mat disp_vis;
-    disp_map.convertTo(disp_vis, CV_8U);
-    FileStorage disp_fs("../data/disparity.ext",FileStorage::WRITE);
-    disp_fs << "disparity" << disp_map;
-	disp_fs.release();
-    imshow("disparity", disp_vis);
-    waitKey();
+		// 2. convert src to d_src
+		cv::cuda::GpuMat d_left_raw(left_src);
+		cv::cuda::GpuMat d_right_raw(right_src);
+	
+		// 3. rectify in GPU
+		cv::cuda::GpuMat d_left_rec, d_right_rec;
+		rectifier.rectify(d_left_raw, d_right_raw, d_left_rec, d_right_rec);
 
-    //build 3 channels depth map
-    Depth dep;
-    dep.computeDepth(disp,rec);
-    Mat Q = dep.getProjectionMatrix();
-    cout << Q << endl;
-    FileStorage depth_fs("../data/depth.ext",FileStorage::WRITE);
-    depth_fs << "depth" << dep.depth;
-	depth_fs.release();
+		// 4. Calculate disparity map
+		cv::cuda::GpuMat d_disparity;
+    	disparityCalculator.computeDisparity(d_left_rec, d_right_rec, d_disparity);
+    	
+		// 5. Calculate depth image
+		cv::cuda::GpuMat d_depth;
+    	depthCalculator.computeDepth(d_disparity, d_depth);
 
-    //build point cloud
-    PCD_SAVER pcl;
-    pcl.buildPointCloud(dep);
-    pcl.savePointCloud("../data/PointCloud.pcd");
+
+		// 6. Optional
+		cv::Mat depth, rgb;
+		d_depth.download(depth);
+		d_left_rec.download(rgb);
+		//pcdSaver.buildPointCloud(depth, rgb);
+		//char filename[80];
+		//sprintf(filename, "%s/PointCloud%02d.pcd", argv[2], i);
+    	//pcdSaver.savePointCloud(filename);
+		FileStorage depth_fs("../data/depth.ext",FileStorage::WRITE);
+    	depth_fs << "depth" << depth;
+		depth_fs.release();
+
+
+    	//Mat Q = dep.getProjectionMatrix();
+    	//cout << Q << endl;
+    	//FileStorage depth_fs("../data/depth.ext",FileStorage::WRITE);
+    	//depth_fs << "depth" << dep.depth;
+		//depth_fs.release();
+
+	
+
+    	//build point cloud
+    	//PCD_SAVER pcl;
+    	//pcl.buildPointCloud(dep);
+    	//pcl.savePointCloud("../data/PointCloud.pcd");
+
+		double end = cv::getTickCount();
+		printf("Total time: %lfms\n", (end - start)*1000/cv::getTickFrequency());
+
+	}
+
 
     return 0;
 }

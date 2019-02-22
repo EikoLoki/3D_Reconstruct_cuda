@@ -1,8 +1,6 @@
-#include <pcd_saver.h>
+#include <pcdSaver.h>
 
-void PCD_SAVER::buildPointCloud(Depth dep){
-    cv::Mat depth(dep.depth);
-    cv::Mat rgb(dep.rgb);
+void PCDSaver::buildPointCloud(cv::Mat& depth, cv::Mat& rgb){
     float scale = 1000;
     PointCloud::Ptr PC(new PointCloud);
     for (int r = 0; r < depth.rows; r++){
@@ -31,7 +29,7 @@ void PCD_SAVER::buildPointCloud(Depth dep){
 
 }
 
-void PCD_SAVER::savePointCloud(const std::string& file){
+void PCDSaver::savePointCloud(const std::string& file){
     std::cout<<"point cloud size = "<< cloud->points.size() << std::endl;
     pcl::io::savePCDFile(file, *cloud);
     std::cout<<"Point cloud saved."<< std::endl;

@@ -4,13 +4,21 @@
 #include <common.h>
 #include <config.h>
 
-class stereoCamera{
-public:
-    enum device_num{left, right};
+class StereoCamera {
 
-    // camera images
-    cv::Mat right_src;
-    cv::Mat left_src;
+public:
+    /* Initialize all the camera parameters*/
+    StereoCamera();
+
+    cv::Mat camera_intrinsic_left;
+    cv::Mat camera_intrinsic_right;
+    cv::Mat camera_distCoeff_left;
+    cv::Mat camera_distCoeff_right;
+
+    cv::Mat R;
+    cv::Mat T;
+	int width;
+	int height;
 
 private:
 
@@ -32,19 +40,6 @@ private:
     cv::Mat camera_td_right;  // tangential distortion of right camera
 
     float camera_baseline;
-    cv::Mat R;
-    cv::Mat T;
-
-public:
-    /* Initialize all the camera parameters*/
-    stereoCamera();
-    cv::Mat getIntrinsic(device_num num);
-    cv::Mat getDistCoeff(device_num num);
-    cv::Mat getRotation();
-    cv::Mat getTranslation();
-
-    /* get image from directory*/
-    bool getImage(const std::string& filepath, const int number);
 
 };
 

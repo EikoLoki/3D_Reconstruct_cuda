@@ -2,7 +2,6 @@
 #define COMMON_H
 
 #define GPU_ON 1
-#define WLS_FILTER 0 // this only work for CPU based disparity computation
 
 #include <iostream>
 #include <memory>
@@ -18,4 +17,5 @@
 #include <cuda_runtime.h>
 #include <cuda.h>
 #endif
+
 #endif

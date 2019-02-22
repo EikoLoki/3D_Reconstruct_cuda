@@ -1,6 +1,8 @@
 %YAML:1.0
 ---
 # camera intrinsics
+camera.width: 1280
+camera.height: 720
 # left camera 
 camera.lfx: 1065.3
 camera.lfy: 1070.8
