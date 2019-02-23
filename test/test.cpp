@@ -9,7 +9,6 @@
 using namespace std;
 using namespace cv;
 
-
 /* get image from directory*/
 void getImage(const std::string& filepath, const int number, cv::Mat& left_src, cv::Mat& right_src){
     char left_name[20];
@@ -41,11 +40,12 @@ int main(int argc, char** argv){
 	int number = atoi(argv[3]);
 
 	StereoCamera camera;
+	double scale = 0.75;
+	camera.setScale(scale);
 	Rectifier rectifier(camera);
 	DisparityCalculator disparityCalculator;
 	DepthCalculator depthCalculator(rectifier.Q);
-	PCDSaver pcdSaver;
-
+	//PCDSaver pcdSaver;
 	for (int i = 1; i <= number; i++){
 
 
@@ -55,14 +55,19 @@ int main(int argc, char** argv){
     	getImage(argv[2], i, left_src, right_src);
 
 		double start = cv::getTickCount();
-
+	
 		// 2. convert src to d_src
 		cv::cuda::GpuMat d_left_raw(left_src);
 		cv::cuda::GpuMat d_right_raw(right_src);
-	
+
+		// scale
+		cv::cuda::GpuMat d_left_scaled, d_right_scaled;
+		cv::cuda::resize(d_left_raw, d_left_scaled, Size(), scale, scale, INTER_LINEAR);
+		cv::cuda::resize(d_right_raw, d_right_scaled,Size(), scale, scale, INTER_LINEAR);
+		
 		// 3. rectify in GPU
 		cv::cuda::GpuMat d_left_rec, d_right_rec;
-		rectifier.rectify(d_left_raw, d_right_raw, d_left_rec, d_right_rec);
+		rectifier.rectify(d_left_scaled, d_right_scaled, d_left_rec, d_right_rec);
 
 		// 4. Calculate disparity map
 		cv::cuda::GpuMat d_disparity;
@@ -72,18 +77,19 @@ int main(int argc, char** argv){
 		cv::cuda::GpuMat d_depth;
     	depthCalculator.computeDepth(d_disparity, d_depth);
 
-
+		double end = cv::getTickCount();
+		printf("Total time: %lfms\n", (end - start)*1000/cv::getTickFrequency());
 		// 6. Optional
-		cv::Mat depth, rgb;
-		d_depth.download(depth);
-		d_left_rec.download(rgb);
+		//cv::Mat depth, rgb;
+		//d_depth.download(depth);
+		//d_left_rec.download(rgb);
 		//pcdSaver.buildPointCloud(depth, rgb);
 		//char filename[80];
 		//sprintf(filename, "%s/PointCloud%02d.pcd", argv[2], i);
     	//pcdSaver.savePointCloud(filename);
-		FileStorage depth_fs("../data/depth.ext",FileStorage::WRITE);
-    	depth_fs << "depth" << depth;
-		depth_fs.release();
+		//FileStorage depth_fs("../data/depth.ext",FileStorage::WRITE);
+    	//depth_fs << "depth" << depth;
+		//depth_fs.release();
 
 
     	//Mat Q = dep.getProjectionMatrix();
@@ -94,16 +100,10 @@ int main(int argc, char** argv){
 
 	
 
-    	//build point cloud
-    	//PCD_SAVER pcl;
-    	//pcl.buildPointCloud(dep);
-    	//pcl.savePointCloud("../data/PointCloud.pcd");
 
-		double end = cv::getTickCount();
-		printf("Total time: %lfms\n", (end - start)*1000/cv::getTickFrequency());
+
 
 	}
-
 
     return 0;
 }

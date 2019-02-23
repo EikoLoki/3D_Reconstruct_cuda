@@ -9,9 +9,8 @@ void DisparityCalculator::computeDisparity(cuda::GpuMat& d_left_rec, cuda::GpuMa
 	cuda::cvtColor(d_right_rec, d_right_gray, CV_BGR2GRAY);
 	sgmw.execute(d_left_gray, d_right_gray, d_disparity_scaled);
 
-	d_disparity_scaled.convertTo(d_disparity, CV_32F, 256.0 / (128.0*16.0));
+	d_disparity_scaled.convertTo(d_disparity, CV_32F, 1.0 / 16.0);
 
-	// TODO: check
 	if (d_disparity.empty()){
         std::cerr << "compute disparity failed!\n" << std::endl;
     }
@@ -42,7 +41,7 @@ void DisparityCalculator::updateParameters(){
 void DisparityCalculator::computeDisparity(Mat& left_rec, Mat& right_rec, Mat& disparity)
 	Mat disparity_scaled;
     sgbm->compute(left_rec, right_rec, disparity_scaled);
-	disparity_scaled.convertTo(disparity, CV_32F, 256.0 / (128.0*16.0)); // TODO
+	disparity_scaled.convertTo(disparity, CV_32F, 1.0 / 16.0)); 
 	
 	if (disparity.empty()){
         std::cerr << "compute disparity failed!\n" << std::endl;

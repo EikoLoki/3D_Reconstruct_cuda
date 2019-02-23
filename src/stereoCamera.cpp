@@ -45,4 +45,20 @@ StereoCamera::StereoCamera(){
     std::cout << "Stereo camera initialized." << std::endl;
 }
 
+void StereoCamera::setScale(float scale){
+
+    width = width * scale;
+    height = height * scale;
+
+	camera_intrinsic_left = (cv::Mat_<double>(3,3) << camera_fx_left * scale, camera_s_left * scale, camera_cx_left * scale,
+                                                                  0, camera_fy_left * scale, camera_cy_left * scale,
+                                                                  0,              0,              1);
+
+	camera_intrinsic_right = (cv::Mat_<double>(3,3) << camera_fx_right * scale, camera_s_right * scale, camera_cx_right * scale,
+                                                                   0, camera_fy_right * scale, camera_cy_right * scale,
+                                                                   0,               0,               1);
+
+}
+
+
 

@@ -10,6 +10,8 @@ public:
     /* Initialize all the camera parameters*/
     StereoCamera();
 
+	void setScale(float scale);
+
     cv::Mat camera_intrinsic_left;
     cv::Mat camera_intrinsic_right;
     cv::Mat camera_distCoeff_left;
