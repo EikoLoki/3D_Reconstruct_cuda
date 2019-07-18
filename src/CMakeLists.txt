@@ -4,7 +4,8 @@ ADD_LIBRARY( 3D-Reconstruct SHARED
     rectifier.cpp
     disparityCalculator.cpp
     depthCalculator.cpp
-    pcdSaver.cpp)
+    CloudSaver.cpp
+    Evaluator.cpp)
 
 
 TARGET_LINK_LIBRARIES(3D-Reconstruct ${THIRD_PARTY_LIBRARIES} ${libSGM_LIB})

@@ -1,52 +1,62 @@
 %YAML:1.0
 ---
-# camera intrinsics
-camera.width: 1280
-camera.height: 720
-# left camera 
-camera.lfx: 1065.3
-camera.lfy: 1070.8
-camera.lcx: 546.0042
-camera.lcy: 394.5711
-camera.ls: 1.1642
-camera.lrd: !!opencv-matrix
-   rows: 1
-   cols: 3
-   dt: f
-   data: [-0.3700, 0.5781, -0.2837] # radial distortion of left camera
-camera.ltd: !!opencv-matrix
-   rows: 1
-   cols: 2
-   dt: f
-   data: [-0.0014, -0.0073] # tangential distortion of right camera
-# right camera
-camera.rfx: 1062.9
-camera.rfy: 1068.0
-camera.rcx: 679.8714
-camera.rcy: 359.9285
-camera.rs: 2.5731
-camera.rrd: !!opencv-matrix
-   rows: 1
-   cols: 3
-   dt: f
-   data: [-0.3991, 0.7110, -0.0069]
-camera.rtd: !!opencv-matrix
-   rows: 1
-   cols: 2
-   dt: f
-   data: [-0.0040, -0.0069]
-
-# camera extrinsics
-camera.bl: 5.35
-camera.R: !!opencv-matrix
+camera_width: 1280
+camera_height: 720
+camera_lIntrinsic: !!opencv-matrix
    rows: 3
    cols: 3
-   dt: f
-   data: [0.999715113352754, -0.006517133674422,-0.022961252203662 ,
-           0.006921033962076, 0.999821941548705, 0.017555184039881,
-           0.022842754277588, -0.017709098408671, 0.999582210931430] # Rotation of right camera to left camera
-camera.T: !!opencv-matrix
+   dt: d
+   data: [ 1.0658898403732724e+03, 0., 5.4510757550014478e+02, 0.,
+       1.0706454500101415e+03, 4.1189855118558052e+02, 0., 0., 1. ]
+camera_rIntrinsic: !!opencv-matrix
+   rows: 3
+   cols: 3
+   dt: d
+   data: [ 1.0584439408238302e+03, 0., 6.8132783387601182e+02, 0.,
+       1.0659114514984324e+03, 3.9379508764195600e+02, 0., 0., 1. ]
+camera_ldiscoeff: !!opencv-matrix
+   rows: 1
+   cols: 5
+   dt: d
+   data: [ -3.8755108821930506e-01, 5.0950592154175012e-01,
+       -5.2250807004919145e-03, -8.9091183716869353e-03,
+       -8.8205852470963200e-02 ]
+camera_rdiscoeff: !!opencv-matrix
+   rows: 1
+   cols: 5
+   dt: d
+   data: [ -3.7140844508476101e-01, 3.2647793118216178e-01,
+       -1.4267117406068649e-03, -9.7779552635214040e-03,
+       5.2624750684744648e-01 ]
+camera_R: !!opencv-matrix
+   rows: 3
+   cols: 3
+   dt: d
+   data: [ 9.9964827891523067e-01, -5.6381264199869743e-03,
+       -2.5913895737411485e-02, 5.8621020590321898e-03,
+       9.9994604901368589e-01, 8.5752446827386825e-03,
+       2.5864149343573603e-02, -8.7241384899365473e-03,
+       9.9962739817711166e-01 ]
+camera_T: !!opencv-matrix
    rows: 3
    cols: 1
-   dt: f
-   data: [-5.403825604029611, 0.133984745864434, -0.098250420949267] # Translation of right camera to left camera
+   dt: d
+   data: [ -5.5034793948964866e+00, 1.7548540135774135e-01,
+       -2.3856917104657008e-01 ]
+camera_E: !!opencv-matrix
+   rows: 3
+   cols: 3
+   dt: d
+   data: [ 5.9372974571472777e-03, 2.3702534106008094e-01,
+       1.7746580419278762e-01, -9.6142448260054247e-02,
+       -4.6668033271317078e-02, 5.5076110450663815e+00,
+       -2.0768563733467854e-01, -5.5021930678772550e+00,
+       -4.2646172023425681e-02 ]
+camera_F: !!opencv-matrix
+   rows: 3
+   cols: 3
+   dt: d
+   data: [ 7.8276612246699976e-08, 3.1110331665155663e-06,
+       1.1697501405471178e-03, -1.2586504175136259e-06,
+       -6.0824156209308580e-07, 7.7790466621797755e-02,
+       -2.4558095218350420e-03, -7.8318855845224161e-02, 1. ]

@@ -6,7 +6,7 @@ void DepthCalculator::computeDepth(cv::cuda::GpuMat& d_disparity, cv::cuda::GpuM
 }
 
 #else
-bool DepthCalculator::computeDepth(cv::Mat& disparity, cv::Mat& depth){
+void DepthCalculator::computeDepth(cv::Mat& disparity, cv::Mat& depth){
 	cv::reprojectImageTo3D(disparity, depth, Q);
 }
 

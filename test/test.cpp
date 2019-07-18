@@ -4,8 +4,9 @@
 #include <rectifier.h>
 #include <disparityCalculator.h>
 #include <depthCalculator.h>
-#include <pcdSaver.h>
+#include <CloudSaver.h>
 
+# if GPU_ON
 using namespace std;
 using namespace cv;
 
@@ -33,19 +34,20 @@ void getImage(const std::string& filepath, const int number, cv::Mat& left_src, 
 
 int main(int argc, char** argv){
     if (argc != 3){
-            cout << "please provide config file and camera file!" << endl;
+            cerr << "please provide config file and camera file!" << endl;
+            return -1;
     }
 
     Config::getParameterFile(argv[1]);
 	int number = atoi(argv[3]);
 
-	StereoCamera camera;
-	double scale = 0.75;
+    StereoCameraConfig camera;
+    double scale = 0.6;
 	camera.setScale(scale);
 	Rectifier rectifier(camera);
 	DisparityCalculator disparityCalculator;
 	DepthCalculator depthCalculator(rectifier.Q);
-	//PCDSaver pcdSaver;
+    CloudSaver pcdSaver;
 	for (int i = 1; i <= number; i++){
 
 
@@ -79,24 +81,18 @@ int main(int argc, char** argv){
 
 		double end = cv::getTickCount();
 		printf("Total time: %lfms\n", (end - start)*1000/cv::getTickFrequency());
-		// 6. Optional
-		//cv::Mat depth, rgb;
-		//d_depth.download(depth);
-		//d_left_rec.download(rgb);
-		//pcdSaver.buildPointCloud(depth, rgb);
-		//char filename[80];
-		//sprintf(filename, "%s/PointCloud%02d.pcd", argv[2], i);
-    	//pcdSaver.savePointCloud(filename);
-		//FileStorage depth_fs("../data/depth.ext",FileStorage::WRITE);
-    	//depth_fs << "depth" << depth;
-		//depth_fs.release();
 
-
-    	//Mat Q = dep.getProjectionMatrix();
-    	//cout << Q << endl;
-    	//FileStorage depth_fs("../data/depth.ext",FileStorage::WRITE);
-    	//depth_fs << "depth" << dep.depth;
-		//depth_fs.release();
+        // 6. Optional
+        cv::Mat depth, rgb;
+        d_depth.download(depth);
+        d_left_rec.download(rgb);
+        pcdSaver.buildPointCloudColor(depth, rgb);
+        char filename[80];
+        sprintf(filename, "../data/PointCloud%02d.pcd", i);
+        pcdSaver.saveCloudToPCD(filename);
+        FileStorage depth_fs("../data/depth.ext",FileStorage::WRITE);
+        depth_fs << "depth" << depth;
+        depth_fs.release();
 
 	
 
@@ -107,3 +103,8 @@ int main(int argc, char** argv){
 
     return 0;
 }
+#else
+int main(){
+    return 0;
+}
+#endif

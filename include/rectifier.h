@@ -6,7 +6,7 @@
 
 class Rectifier{
 public:
-	Rectifier(StereoCamera& cam) : camera(cam) {
+    Rectifier(StereoCameraConfig& cam) : camera(cam) {
 		rectifyPrepare();
 	}
 
@@ -24,7 +24,7 @@ private:
 	
 	bool rectifyPrepare();
 
-	StereoCamera& camera;
+    StereoCameraConfig& camera;
 
     cv::Mat Rl;
     cv::Mat Rr;

@@ -2,11 +2,11 @@
 #define DEPTH_H
 
 #include <common.h>
-#include <disparityCalculator.h>
-#include <rectifier.h>
 
 class DepthCalculator{
 public:
+
+    // Q is the reprojection matrix
 	DepthCalculator(cv::Mat q) : Q(q) {
 		Q.convertTo(Q, CV_32F);
 	}
