@@ -15,14 +15,14 @@
 
 int main(int argc, char **argv){
 
-    if (argc !=2){
-        std::cerr << "please input ./<executable> <rootpath>" << std::endl;
-        return -1;
-    }
+//    if (argc !=2){
+//        std::cerr << "please input ./<executable> <rootpath>" << std::endl;
+//        return -1;
+//    }
 
     //get the rootpath as default
     std::string rootpath;
-    rootpath = argv[1];
+    rootpath = "../demo";
     std::string left_path = rootpath + "/left";
     std::string right_path = rootpath  + "/right";
     std::string scene_path = rootpath + "/scene_sgm";

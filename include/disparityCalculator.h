@@ -17,7 +17,7 @@ public:
     void computeDisparity(cv::cuda::GpuMat& d_left_rec, cv::cuda::GpuMat& d_right_rec, cv::cuda::GpuMat& d_disparity);
 #else 
     DisparityCalculator():P1(8),P2(32),SADWindowSize(9), preFilterCap(0),
-        		speckleRange(2),speckleWindowSize(200),maxDisparityofImg(10) {	
+                speckleRange(2),speckleWindowSize(200),maxDisparityofImg(10) {
         sgbm = cv::StereoSGBM::create(0,16,3);
 		updateParameters();
 	}
