@@ -26,7 +26,7 @@ void getImage(const std::string& filepath, const int number, cv::Mat& left_src, 
     if(left_src.empty() || right_src.empty()){
         std::cerr << "file does not exist!" << std::endl;
     } else {
-        std::cout << "image is loaded successfully!" << std::endl;
+        std::cout << "images are loaded successfully!" << std::endl;
     }
 }
 
@@ -34,7 +34,7 @@ void getImage(const std::string& filepath, const int number, cv::Mat& left_src, 
 
 int main(int argc, char** argv){
     if (argc != 3){
-            cerr << "please provide config file and camera file!" << endl;
+            cerr << "Input CML format error: usage <parameter_file.json> <image_pair_path> <total_image_pairs>" << endl;
             return -1;
     }
 
@@ -62,7 +62,7 @@ int main(int argc, char** argv){
 		cv::cuda::GpuMat d_left_raw(left_src);
 		cv::cuda::GpuMat d_right_raw(right_src);
 
-		// scale
+		// (optional) scale (warning: if you scale the image, you also need to scale the camera parameters)
 		cv::cuda::GpuMat d_left_scaled, d_right_scaled;
 		cv::cuda::resize(d_left_raw, d_left_scaled, Size(), scale, scale, INTER_LINEAR);
 		cv::cuda::resize(d_right_raw, d_right_scaled,Size(), scale, scale, INTER_LINEAR);
